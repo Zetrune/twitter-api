@@ -25,11 +25,19 @@ class TestTweetViews(TestCase):
         response = self.client.get("/tweets")
         response_tweet = response.json
         print(response_tweet)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response_tweet), 2)
         self.assertEqual(response_tweet[0]["text"], "First tweet")
         self.assertIsNotNone(response_tweet["created_at"])
         self.assertEqual(response_tweet[1]["text"], "Second tweet")
         self.assertIsNotNone(response_tweet["created_at"])
+
+    def test_tweet_empty_list(self):
+        response = self.client.get("/tweets")
+        response_tweet = response.json
+        print(response_tweet)
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response_tweet)
 
     def test_tweet_show(self):
         first_tweet = Tweet(text="First tweet")
