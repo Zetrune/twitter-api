@@ -8,11 +8,13 @@ api = Namespace('tweets')
 json_tweet = api.model('Tweet', {
     'id': fields.Integer,
     'text': fields.String,
-    'created_at': fields.DateTime
+    'created_at': fields.DateTime,
+    'user': fields.Integer
 })
 
 json_new_tweet = api.model('New tweet', {
-    'text': fields.String(required=True)
+    'text': fields.String(required=True),
+    'user': fields.Integer(required=True)
 })
 
 @api.route('/<int:id>')
@@ -54,8 +56,9 @@ class TweetsResource(Resource):
     @api.expect(json_new_tweet, validate=True)
     def post(self):
         text = api.payload["text"]
+        user_id = api.payload["user"]
         if len(text) > 0:
-            tweet = Tweet(text=text)
+            tweet = Tweet(text=text, user=user_id)
             db.session.add(tweet)
             db.session.commit()
             return tweet, 201

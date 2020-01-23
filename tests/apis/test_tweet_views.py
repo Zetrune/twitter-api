@@ -1,6 +1,6 @@
 from flask_testing import TestCase
 from app import create_app, db
-from app.models import Tweet
+from app.models import Tweet, User
 
 class TestTweetViews(TestCase):
     def create_app(self):
@@ -11,15 +11,20 @@ class TestTweetViews(TestCase):
 
     def setUp(self):
         db.create_all()
+        first_user = User(username="First user", email="first@user.com", api_key="12345")
+        db.session.add(first_user)
 
     def tearDown(self):
         db.session.remove()
         db.drop_all()
 
     def test_tweet_list(self):
-        first_tweet = Tweet(text="First tweet")
+        response = self.client.get("/users")
+        response_user = response.json[-1]
+        user_id = response_user["id"]
+        first_tweet = Tweet(text="First tweet", user=user_id)
         db.session.add(first_tweet)
-        second_tweet = Tweet(text="Second tweet")
+        second_tweet = Tweet(text="Second tweet", user=user_id)
         db.session.add(second_tweet)
         db.session.commit()
         response = self.client.get("/tweets")
@@ -44,7 +49,10 @@ class TestTweetViews(TestCase):
         self.assertEqual(len(response_tweet), 0)
 
     def test_tweet_show(self):
-        first_tweet = Tweet(text="First tweet")
+        response = self.client.get("/users")
+        response_user = response.json[-1]
+        user_id = response_user["id"]
+        first_tweet = Tweet(text="First tweet", user=user_id)
         db.session.add(first_tweet)
         db.session.commit()
         response = self.client.get("/tweets/1")
@@ -55,24 +63,33 @@ class TestTweetViews(TestCase):
         self.assertIsNotNone(response_tweet["created_at"])
 
     def test_tweet_create(self):
-        response = self.client.post("/tweets", json={'text': 'New tweet!'})
+        response = self.client.get("/users")
+        response_user = response.json[-1]
+        user_id = response_user["id"]
+        response = self.client.post("/tweets", json={'text': 'New tweet!', 'user': user_id})
         created_tweet = response.json
         self.assertEqual(response.status_code, 201)
         self.assertEqual(created_tweet["id"], 1)
         self.assertEqual(created_tweet["text"], "New tweet!")
 
     def test_tweet_update(self):
-        first_tweet = Tweet(text="First tweet")
+        response = self.client.get("/users")
+        response_user = response.json[-1]
+        user_id = response_user["id"]
+        first_tweet = Tweet(text="First tweet", user=user_id)
         db.session.add(first_tweet)
         db.session.commit()
-        response = self.client.patch("/tweets/1", json={'text': 'New text'})
+        response = self.client.patch("/tweets/1", json={'text': 'New text', 'user': user_id})
         updated_tweet = response.json
         self.assertEqual(response.status_code, 200)
         self.assertEqual(updated_tweet["id"], 1)
         self.assertEqual(updated_tweet["text"], "New text")
 
     def test_tweet_delete(self):
-        first_tweet = Tweet(text="First tweet")
+        response = self.client.get("/users")
+        response_user = response.json[-1]
+        user_id = response_user["id"]
+        first_tweet = Tweet(text="First tweet", user=user_id)
         db.session.add(first_tweet)
         db.session.commit()
         self.client.delete("/tweets/1")
