@@ -16,6 +16,33 @@ class TestTweetViews(TestCase):
         db.session.remove()
         db.drop_all()
 
+    def test_tweet_list(self):
+        first_tweet = Tweet(text="First tweet")
+        db.session.add(first_tweet)
+        second_tweet = Tweet(text="Second tweet")
+        db.session.add(second_tweet)
+        db.session.commit()
+        response = self.client.get("/tweets")
+        response_tweet = response.json
+        print(response_tweet)
+        first_tweet = response_tweet[0]
+        second_tweet = response_tweet[1]
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response_tweet, list)
+        self.assertEqual(len(response_tweet), 2)
+        self.assertEqual(first_tweet["text"], "First tweet")
+        self.assertIsNotNone(first_tweet["created_at"])
+        self.assertEqual(second_tweet["text"], "Second tweet")
+        self.assertIsNotNone(second_tweet["created_at"])
+
+    def test_tweet_empty_list(self):
+        response = self.client.get("/tweets")
+        response_tweet = response.json
+        print(response_tweet)
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response_tweet, list)
+        self.assertEqual(len(response_tweet), 0)
+
     def test_tweet_show(self):
         first_tweet = Tweet(text="First tweet")
         db.session.add(first_tweet)
