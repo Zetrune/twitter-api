@@ -16,8 +16,10 @@ def create_app():
         return "Goodbye World!"
 
     from .apis.tweets import api as tweets
+    from .apis.users import api as users
     api = Api()
     api.add_namespace(tweets)
+    api.add_namespace(users)
     api.init_app(app)
 
     app.config['ERROR_404_HELP'] = False
